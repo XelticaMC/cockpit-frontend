@@ -1,50 +1,37 @@
-import React, { HTMLProps, useEffect, useRef } from 'react';
-import { Terminal as Xterm } from 'xterm';
-import { FitAddon } from 'xterm-addon-fit';
+import React, { HTMLProps, useEffect, useRef, useState } from 'react';
+
+import { getServerLogAsync } from '../api';
+import { useAppSelector } from '../store';
 
 import 'xterm/css/xterm.css';
 
 export default function Terminal(p: HTMLProps<HTMLDivElement>) {
   const terminalRef = useRef<HTMLDivElement>(null);
+  const {data} = useAppSelector(state => state.server);
+  const [log, setLog] = useState<string[]>([]);
 
   useEffect(() => {
     if (!terminalRef.current) return;
-    const term = new Xterm();
-    const fitAddon = new FitAddon();
-    term.loadAddon(fitAddon);
-    term.open(terminalRef.current);
+    setLog([]);
 
-    fitAddon.fit();
-
-    term.onKey(e => {
-      console.log(e)
-      const ev = e.domEvent
-      const printable = !ev.altKey && !ev.ctrlKey && !ev.metaKey
-
-      if (ev.key === 'Enter') {
-        term.write('\r\n %');
-      } else if (ev.key === 'Backspace') {
-        term.write('\b \b');
-      } else if (printable) {
-        term.write(e.key);
-      }
-    });
-
-    // @ts-ignore // なぜかエラーなるので
-    const observer = new ResizeObserver(() => {
-      fitAddon.fit();
-    });
-
-    observer.observe(document.body);
-
-    return () => {
-      term.dispose();
-      observer.disconnect();
-    };
+    getServerLogAsync().then(logs => logs.forEach(append));
   }, []);
+
+  useEffect(() => {
+    if (!data) return;
+    if (data.server === null) {
+      append('有効な Minecraft サーバーがインストールされていないようです。サーバーページへ移動し、インストールを開始してください。');
+    }
+  }, [data]);
+
+  const append = (text: string) => {
+    setLog(l => [...l, text]);
+  };
   
 
   return (
-    <div className="_term" ref={terminalRef} {...p}></div>
+    <div className="_term" ref={terminalRef} {...p}>
+      {log.map(l => <>{l}<br/></>)}
+    </div>
   )
 }
