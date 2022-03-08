@@ -10,7 +10,7 @@ export async function getAsync<T>(endpoint: string, q?: Record<string, string>) 
   return res.json().then(d => d as T);
 }
 
-export async function postAsync<T>(endpoint: string, body?: Record<string, any>) {
+export async function postAsync<T = undefined>(endpoint: string, body?: Record<string, any>) {
   const url = `${process.env.REACT_APP_API_BASE}/${endpoint}`;
   const res = await fetch(url, {
     method: 'POST',
@@ -19,6 +19,7 @@ export async function postAsync<T>(endpoint: string, body?: Record<string, any>)
       'Content-Type': 'application/json',
     },
   });
+  if (res.status === 204) return;
   return res.json().then(d => d as T);
 }
 
@@ -31,13 +32,17 @@ export function getServerLogAsync() {
 }
 
 export function postServerInstallAsync(body: ServerInstallBody) {
-  return postAsync<any>('server/install', body);
+  return postAsync('server/install', body);
 }
 
 export function postServerStartAsync() {
-  return postAsync<any>('server/start');
+  return postAsync('server/start');
 }
 
 export function postServerStopAsync() {
-  return postAsync<any>('server/stop');
+  return postAsync('server/stop');
+}
+
+export function postServerCommandAsync(command: string) {
+  return postAsync('server/command', { command });
 }

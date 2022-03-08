@@ -1,5 +1,5 @@
-import React, { useLayoutEffect, useRef } from 'react';
-import { postServerStartAsync, postServerStopAsync } from '../api';
+import React, { KeyboardEvent, useLayoutEffect, useRef, useState } from 'react';
+import { postServerCommandAsync, postServerStartAsync, postServerStopAsync } from '../api';
 
 import { NavbarItems } from '../App';
 import Terminal from '../components/Terminal';
@@ -7,11 +7,13 @@ import { useTitle } from '../hooks/useTitle';
 import { useAppDispatch, useAppSelector } from '../store';
 import { setState } from '../store/slices/server';
 
-export default function TerminalPage() {
+export default function ConsolePage() {
   const {data} = useAppSelector(state => state.server);
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<HTMLDivElement>(null);
   const commandRef = useRef<HTMLDivElement>(null);
+
+  const [command, setCommand] = useState('');
 
   const dispatch = useAppDispatch();
 
@@ -56,6 +58,13 @@ export default function TerminalPage() {
     }
   };
 
+  const onKeyPressCommand = async (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      await postServerCommandAsync(command);
+      setCommand('');
+    }
+  };
+
   return (
     <main className="vstack" ref={containerRef}>
       <NavbarItems.Source>
@@ -71,7 +80,7 @@ export default function TerminalPage() {
       </div>
       <div className="hgroup bg-panel rounded" ref={commandRef}>
         <label className="input-label">/</label>
-        <input className="input-field bg-panel" type="text" placeholder="コマンド?" />
+        <input className="input-field bg-panel" type="text" placeholder="コマンド?" value={command} disabled={!isRunning} onChange={e => setCommand(e.target.value)} onKeyPress={onKeyPressCommand} />
       </div>
     </main>
   );

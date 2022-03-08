@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom';
 import { postServerInstallAsync } from '../../api';
 import { getPaperBuild, getPaperProject, getPaperVersion } from '../../api/paper';
 import { PaperBuildResponse } from '../../api/response/paper';
 import Loading from '../../components/Loading';
 import { useTitle } from '../../hooks/useTitle'
+import { useAppSelector } from '../../store';
 
 export default function ServerSetupPage() {
   useTitle('セットアップ');
+  const navigate = useNavigate();
+  const {data} = useAppSelector(state => state.server);
+
   const [versions, setVersions] = useState<string[]>([]);
   const [version, setVersion] = useState<string | null>(null);
   const [builds, setBuilds] = useState<number[]>([]);
@@ -46,7 +51,12 @@ export default function ServerSetupPage() {
       build,
       file: buildInfo.downloads['application'].name,
     });
+    navigate('/server');
   };
+
+  if (data.state !== 'STOPPED') {
+    return <>サーバーが完全に停止していないため、セットアップすることはできません。</>;
+  }
 
   return (
     <article className="vstack">

@@ -4,15 +4,16 @@ import { Helmet } from 'react-helmet-async';
 import { Route, Routes } from 'react-router-dom';
 import { createTeleporter } from 'react-teleporter';
 
-import { getServerAsync } from './api';
+import { getServerAsync, getServerLogAsync } from './api';
 import Drawer from './components/Drawer';
 import IndexPage from './pages';
 import ServerPage from './pages/server';
 import ServerSetupPage from './pages/server/setup';
-import TerminalPage from './pages/terminal';
+import ConsolePage from './pages/console';
 import { useAppDispatch, useAppSelector } from './store';
 import { setMenuOpen } from './store/slices/screen';
-import { setData } from './store/slices/server';
+import { appendLog, clearLog, setData, setLog, setServer, setState } from './store/slices/server';
+import streaming from './api/streaming';
 
 export const NavbarItems = createTeleporter();
 
@@ -29,6 +30,11 @@ function App() {
 
   useEffect(() => {
     getServerAsync().then(data => dispatch(setData(data)));
+    getServerLogAsync().then(logs => dispatch(setLog(logs)));
+    streaming.on('server.log', log => dispatch(appendLog(log)));
+    streaming.on('server.log.clear', () => dispatch(clearLog()));
+    streaming.on('server.update', server => dispatch(setServer(server)));
+    streaming.on('server.update.state', state => dispatch(setState(state)));
   }, [dispatch]);
 
   return (
@@ -53,7 +59,7 @@ function App() {
       <div className="container">
         <Routes>
           <Route path="/" element={<IndexPage />} />
-          <Route path="/console" element={<TerminalPage />} />
+          <Route path="/console" element={<ConsolePage />} />
           <Route path="/server" element={<ServerPage />} />
           <Route path="/server/setup" element={<ServerSetupPage />} />
         </Routes>

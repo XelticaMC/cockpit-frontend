@@ -2,7 +2,11 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { ServerResponse } from '../../api/response/server';
 
 const initialState = {
-  data: null as ServerResponse | null,
+  data: {
+    server: null,
+    state: 'UPDATING',
+  } as ServerResponse,
+  log: [] as string[],
 }
 
 const serverSlice = createSlice({
@@ -13,8 +17,19 @@ const serverSlice = createSlice({
       state.data = payload;
     },
     setState(state, {payload}: PayloadAction<ServerResponse['state']>) {
-      if (!state.data) return;
       state.data.state = payload;
+    },
+    setServer(state, {payload}: PayloadAction<ServerResponse['server']>) {
+      state.data.server = payload;
+    },
+    setLog(state, {payload}: PayloadAction<string[]>) {
+      state.log = payload;
+    },
+    appendLog(state, {payload}: PayloadAction<string>) {
+      state.log.push(payload);
+    },
+    clearLog(state, _: PayloadAction<void>) {
+      state.log = [];
     },
   }
 });
@@ -22,6 +37,10 @@ const serverSlice = createSlice({
 export const {
   setData,
   setState,
+  setServer,
+  setLog,
+  appendLog,
+  clearLog,
 } = serverSlice.actions;
 
 export default serverSlice.reducer;
